@@ -1,0 +1,41 @@
+--- 
+  - hosts: ssg-vms
+    connection: local 
+    vars:
+     - ansible_python_interpreter : /Users/hyungsok/mypy/bin/python
+     - vcenter_hostname: 10.72.86.227
+    tasks:
+      - name : clone vms for template  
+        vsphere_guest:
+          vcenter_hostname: '{{ vcenter_hostname }}'
+          username: "administrator@vsphere.local"
+          password: "!234Qwer"
+          guest: '{{ inventory_hostname}}'
+          from_template: yes
+          resource_pool: "004.D-Group"
+          template_src: centos_7_all
+          esxi:
+            datacenter: HX-DC
+            hostname: hx1.cisko-dc.com
+          cluster: HX-Cluster
+          vm_extra_config:
+            guestinfo.hostname: "{{ inventory_hostname}}"
+            note: 'create by ansible / hyungsok'
+            folder: D-Group
+          validate_certs: no
+        tags:
+          - clone 
+
+      - name: remove vms 
+        vsphere_guest:
+          vcenter_hostname: '{{ vcenter_hostname }}'
+          username: "administrator@vsphere.local"
+          password: "!234Qwer"
+          guest: '{{ inventory_hostname}}'
+          state: absent
+          validate_certs: no
+          force: yes
+        tags:
+          - destroy
+
+

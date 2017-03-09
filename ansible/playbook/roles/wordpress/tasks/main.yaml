@@ -1,0 +1,95 @@
+---
+- name: install required packages for wordpress 
+  package: name={{item}} 
+  with_items:
+    - httpd
+    - mariadb
+    - mariadb-server
+    - mariadb-devel 
+    - mariadb-libs
+    - php
+    - php-mysql
+    - php-gd
+    - php-ldap
+    - php-imap
+    - unzip
+  tags:
+    - application
+    - database
+
+- name: download wordpress codes from server 
+  get_url:
+    url: https://ko.wordpress.org/{{wordpress_version}}
+    dest: /opt/{{wordpress_version}}
+    validate_certs: no
+  tags:
+    - application 
+
+- name: clean up 
+  command: rm -rf {{app_dir}} 
+  tags:
+    - application
+
+- name: extract wordpress
+  command: unzip /opt/{{wordpress_version}} -d /opt
+  tags:
+    - application 
+
+- name: update local config 
+  template: dest={{app_dir}}/wp-config.php src=wp-config.j2
+  tags:
+    - application
+
+- name: chown & mode for /opt/wordpress 
+  command: chown -R apache:apache {{app_dir}}
+  tags:
+    - application
+
+- name: mariadb default character set for mariadb-5.5
+  ini_file: dest=/etc/my.cnf.d/server.cnf section=mariadb-5.5 option={{item.name}} value={{item.value}}
+  with_items:
+#    - {name: init_connect, value: '"SET collation_connection = utf8_general_ci"'}
+    - {name: init_connect, value: '"SET NAMES utf8"'}
+    - {name: character-set-server, value: utf8}
+    - {name: collation-server, value: utf8_general_ci}
+  tags:
+    - database
+
+- name: restart mariadb 
+  service: name={{item}} state=restarted
+  with_items:
+    - mariadb
+  tags:
+    - database
+
+- name: drop database on mariadb
+  mysql_db: name={{ database_name}} state=absent
+  ignore_errors: true
+  tags:
+    - database
+
+- name: create database on mariadb
+  mysql_db: name={{ database_name}} state=present
+  tags:
+    - database
+
+- name: make mariadb account 
+  mysql_user: host={{ item }} priv="{{database_name}}.*:ALL" login_user=root name={{ database_user}} password={{ database_pass}}
+  with_items:
+    - "{{ database_host}}"
+    - localhost
+    - '%'
+  tags:
+    - database
+
+- name: create link on /var/www/html
+  file: path=/var/www/html/{{service_path}} state=link src={{app_dir}}
+
+- name: update php listen 8088 
+  lineinfile: dest=/etc/httpd/conf/httpd.conf regexp='^Listen ' insertafter='^#Listen ' line='Listen 8080'
+
+- name: restart appache 
+  service: name={{item}} state=restarted
+  with_items:
+    - httpd 
+  when: true

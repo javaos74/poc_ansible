@@ -1,0 +1,24 @@
+---
+- name : clone vms for template  
+  vsphere_guest:
+    vcenter_hostname: '{{ vcenter_hostname }}'
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    guest: '{{ inventory_hostname}}'
+    from_template: yes
+    resource_pool: "004.D-Group"
+    template_src: centos_7_all
+    esxi:
+      datacenter: "{{ datacenter}}"
+      hostname: hx1.cisko-dc.com
+    cluster: "{{ cluster }}"
+    vm_extra_config:
+      guestinfo.hostname: "{{ inventory_hostname}}"
+      note: 'create by ansible / hyungsok'
+      folder: D-Group
+    vm_nic:
+      nic1:
+        type: vmxnet3
+        network: VM Network
+        network_type: standard
+    validate_certs: no

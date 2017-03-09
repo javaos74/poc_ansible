@@ -1,0 +1,6 @@
+database_host: localhost
+database_name: wordpress
+database_user: wp
+database_pass: 1234Qwer
+wordpress_version: "wordpress-4.7.3-ko_KR.zip"
+service_path : wordpress

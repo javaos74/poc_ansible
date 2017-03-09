@@ -1,0 +1,13 @@
+---
+ - hosts: ssg-web
+   become: yes
+   vars:
+     user_name : cisco 
+     user_home: /home/cisco
+     app_dir : /opt/wordpress
+#     ansible_python_interpreter: /Users/hyungsok/mypy27/bin/python
+   roles:
+#     - common
+#     - guest
+#     - wordpress 
+     - nginx

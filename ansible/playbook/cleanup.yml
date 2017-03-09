@@ -1,0 +1,55 @@
+---
+ - hosts: temp
+   gather_facts: yes 
+   become: yes
+   tasks:
+     - name: clean out yum
+       shell: yum clean all
+       ignore_errors: true
+
+     - name: clean out apt 
+       shell: apt-get clean 
+       ignore_errors: true
+       when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+     - name: remove the udev persistent device rules
+       shell: /bin/rm -f /etc/udev/rules.d/70*
+
+     - name: configure dhcp ip allocation 
+       lineinfile: > 
+            dest=/etc/sysconfig/network-scripts/ifcfg-{{item}} 
+            line='BOOTPROTO="dhcp"' regexp="^BOOTPROTO="
+       with_items:
+         - "{{ ansible_interfaces }}"
+       when: ('{{item}}' != 'lo')
+       ignore_errors: true
+
+     - name: remove maual ip configuraiton 
+       lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-{{item}} state=absent backup=yes regexp="^(IPADDR|GATEWAY|PREFIX|DNS1)="
+       with_items:
+         - "{{ ansible_interfaces }}"
+       when: ('{{item}}' != 'lo')
+       ignore_errors: true       
+
+     - name: remove the traces of the template MAC address and UUIDs.
+       lineinfile: dest=/etc/sysconfig/network-scripts/ifcfg-{{item}} state=absent regexp="^(UUID|HWADDR)="
+       with_items:
+         - "{{ ansible_interfaces }}"
+       when: ('{{item}}' != 'lo')
+       ignore_errors: true
+
+     - name: cleanup interfaces file in case of Ubuntu 
+       copy: src=files/interfaces dest=/etc/network/interfaces
+       when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+     - name: remove host sshkey 
+       shell: /bin/rm –f /etc/ssh/ssh*key*
+       ignore_errors: true
+
+     - name: copy host key generation script for ubuntu 
+       copy: src=files/ssh_host_key.sh dest=/etc/ssh_host_key.sh owner=root mode='u+rwx'
+       when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'
+
+     - name: update rc.local including /etc/ssh_host_key.sh to run 
+       lineinfile: insertbefore="^exit" line="/etc/ssh_host_key.sh" dest=/etc/rc.local 
+       when: ansible_distribution == 'Ubuntu' or ansible_distribution == 'Debian'

@@ -1,0 +1,26 @@
+---
+- name: create vm from template 
+  vmware_guest:
+    hostname : "{{ vcenter_hostname }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    validate_certs: no
+    esxi_hostname : hx1.cisko-dc.com
+    datacenter: "{{ datacenter}}"
+    name: "{{ inventory_hostname}}"
+    folder: D-Group
+#    cluster: "{{ cluster }}"
+    networks:
+      - name: VM Network
+        ip: 192.168.11.11
+        netmask: "{{ netmask }}"
+        gateway: "{{ gateway}}"
+        device_type: vmxnet3
+    template: centos_7_all
+#    customization:
+#      - dns_servers: 8.8.8.8
+#    annotation: 'created by Ansible :)'
+    wait_for_ip_address: yes
+    when: false
+  register: deploy
+---

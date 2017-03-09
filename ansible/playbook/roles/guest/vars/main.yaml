@@ -1,0 +1,11 @@
+ansible_python_interpreter: /Users/hyungsok/mypy27/bin/python
+vcenter_hostname: 10.72.86.227
+vcenter_username: "administrator@vsphere.local"
+vcenter_password: "!234Qwer"
+datacenter: HX-DC
+cluster: HX-Cluster
+netmask: 255.255.255.0
+gateway: 192.168.11.1
+dns1: 8.8.8.8
+ssg-web-01: '192.168.11.10'
+ssg-web-02: '192.168.11.11'
